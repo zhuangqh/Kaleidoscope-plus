@@ -29,7 +29,7 @@ namespace ks {
         numStr += lastChar;
         lastChar = input[++lastIndex];
         if (hasDot & (lastChar == '.')) { // detect two '.'
-          error("wrong number format");
+          err_exit("wrong number format");
         }
       } while (isdigit(lastChar) || lastChar == '.');
 
@@ -47,7 +47,7 @@ namespace ks {
     }
 
     // Check for end of file.  Don't eat the EOF.
-    if (lastChar == EOF)
+    if (lastChar == '\0')
       return tok_eof;
 
     // Otherwise, just return the character as its ascii value.

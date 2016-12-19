@@ -26,11 +26,23 @@ namespace ks {
     Lexer(std::string &&in) : input(in) {
       input += "\0";
     }
+
     // Return the next token from `input`
     int get_token();
+    
+    int get_next_token() {
+      curToken = get_token();
+      return curToken;
+    }
+
+    void set_input(const std::string &s) {
+      input = s;
+      lastIndex = 0;
+    }
 
     std::string curIdentifierStr;
     double curNumVal;
+    int curToken;
   };
 
 }
