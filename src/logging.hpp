@@ -1,12 +1,11 @@
 #pragma once
-#include <stdio.h>
-#include <stdlib.h>
 
 namespace ks {
 
-  void error(const char* info) {
-    fprintf(stderr, "error: %s\n", info);
-    exit(0);
-  }
+  void err_exit(const char* msg);
+
+  void info(const char* msg);
+
+  void error(const char *msg);
 
 }
