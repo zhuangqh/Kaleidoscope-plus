@@ -2,6 +2,9 @@
 
 #include <string>
 #include <vector>
+#include <memory>
+
+using std::unique_ptr;
 
 namespace ks {
 
@@ -22,25 +25,25 @@ namespace ks {
   class VariableExprAST : public ExprAST {
     std::string Name;
   public:
-    VariableExprAST(const std::string &name) : Name(name) {}
+    VariableExprAST(const std::string name) : Name(std::move(name)) {}
   };
 
   // BinaryExprAST - Expression class for a binary operator.
   class BinaryExprAST : public ExprAST {
     char Op;
-    ExprAST *LHS, *RHS;
+    unique_ptr<ExprAST> LHS, RHS;
   public:
-    BinaryExprAST(char op, ExprAST *lhs, ExprAST *rhs)
-      : Op(op), LHS(lhs), RHS(rhs) {}
+    BinaryExprAST(char op, unique_ptr<ExprAST> lhs, unique_ptr<ExprAST> rhs)
+      : Op(op), LHS(std::move(lhs)), RHS(std::move(rhs)) {}
   };
 
   // CallExprAST - Expression class for function calls.
   class CallExprAST : public ExprAST {
     std::string Callee;
-    std::vector<ExprAST*> Args;
+    std::vector<std::unique_ptr<ExprAST>> Args;
   public:
-    CallExprAST(const std::string &callee, std::vector<ExprAST*> &args)
-      : Callee(callee), Args(args) {}
+    CallExprAST(const std::string callee, std::vector<unique_ptr<ExprAST>> args)
+      : Callee(std::move(callee)), Args(std::move(args)) {}
   };
 
   // PrototypeAST - This class represents the "prototype" for a function,
@@ -50,17 +53,17 @@ namespace ks {
     std::string Name;
     std::vector<std::string> Args;
   public:
-    PrototypeAST(const std::string &name, const std::vector<std::string> &args)
-      : Name(name), Args(args) {}
+    PrototypeAST(const std::string name, const std::vector<std::string> args)
+      : Name(std::move(name)), Args(std::move(args)) {}
   };
 
   // FunctionAST - This class represents a function definition itself.
   class FunctionAST {
-    PrototypeAST *Proto;
-    ExprAST *Body;
+    unique_ptr<PrototypeAST> Proto;
+    unique_ptr<ExprAST> Body;
   public:
-    FunctionAST(PrototypeAST *proto, ExprAST *body)
-      : Proto(proto), Body(body) {}
+    FunctionAST(unique_ptr<PrototypeAST> proto, unique_ptr<ExprAST> body)
+      : Proto(std::move(proto)), Body(std::move(body)) {}
   };
 
 }

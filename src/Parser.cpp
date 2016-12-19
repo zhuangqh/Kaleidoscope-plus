@@ -1,8 +1,5 @@
 #include "./Parser.hpp"
 #include "./logging.hpp"
-#include <string>
-#include <vector>
-#include <map>
 #include <iostream>
 
 namespace ks {
@@ -22,14 +19,14 @@ namespace ks {
     return prec;
   }
 
-  ExprAST* Parser::parse_expr() {
-    ExprAST *LHS = parse_primary();
+  unique_ptr<ExprAST> Parser::parse_expr() {
+    unique_ptr<ExprAST> LHS = parse_primary();
     if (!LHS) return nullptr;
 
-    return parse_binOp_RHS(0, LHS);
+    return parse_binOp_RHS(0, std::move(LHS));
   }
 
-  ExprAST* Parser::parse_primary() {
+  unique_ptr<ExprAST> Parser::parse_primary() {
     switch (curToken) {
       case tok_identifier:
         return parse_id();
@@ -44,7 +41,7 @@ namespace ks {
     }
   }
 
-  ExprAST* Parser::parse_binOp_RHS(int exprPrec, ExprAST *LHS) {
+  unique_ptr<ExprAST> Parser::parse_binOp_RHS(int exprPrec, unique_ptr<ExprAST>LHS) {
     while (true) {
       int nextPrec = get_token_precedence();
 
@@ -58,37 +55,37 @@ namespace ks {
       get_next_token();  // eat binop
 
       // Parse the primary expression after the binary operator.
-      ExprAST *RHS = parse_primary();
+      unique_ptr<ExprAST> RHS = std::move(parse_primary());
       if (!RHS) return nullptr;
 
       // If BinOp binds less tightly with RHS than the operator after RHS, let
       // the pending operator take RHS as its LHS.
       nextPrec = get_token_precedence();
       if (exprPrec < nextPrec) {
-        RHS = parse_binOp_RHS(exprPrec + 1, RHS);
+        RHS = parse_binOp_RHS(exprPrec + 1, std::move(RHS));
         if (RHS == 0) return nullptr;
       }
 
       // Merge LHS/RHS.
-      LHS = new BinaryExprAST(binOp, LHS, RHS);
+      LHS.reset(new BinaryExprAST(binOp, std::move(LHS), std::move(RHS)));
     }
   }
 
-  ExprAST* Parser::parse_id() {
+  unique_ptr<ExprAST> Parser::parse_id() {
     std::string id = curIdentifierStr;
 
     get_next_token(); // eat identifier
 
     if (curToken != '(')
-      return new VariableExprAST(id);
+      return unique_ptr<VariableExprAST>(new VariableExprAST(id));
 
     get_next_token(); // eat '('
 
-    std::vector<ExprAST*> args;
+    std::vector<unique_ptr<ExprAST>> args;
     while (curToken != ')') {
-      ExprAST *e = parse_expr();
+      unique_ptr<ExprAST> e = parse_expr();
       if (!e) return nullptr;
-      args.push_back(e);
+      args.push_back(std::move(e));
 
       if (curToken == ')') break;
 
@@ -102,18 +99,18 @@ namespace ks {
 
     get_next_token(); // eat ')'
 
-    return new CallExprAST(id, args);
+    return unique_ptr<ExprAST>(new CallExprAST(id, std::move(args)));
   }
 
-  ExprAST* Parser::parse_number() {
-    ExprAST *result = new NumberExprAST(curNumVal);
+  unique_ptr<ExprAST> Parser::parse_number() {
+    unique_ptr<ExprAST> result(new NumberExprAST(curNumVal));
     get_next_token();
     return result;
   }
 
-  ExprAST* Parser::parse_parenexpr() {
+  unique_ptr<ExprAST> Parser::parse_parenexpr() {
     get_next_token(); // eat '('
-    ExprAST *e = parse_expr();
+    unique_ptr<ExprAST> e = parse_expr();
 
     if (!e) return nullptr;
 
@@ -126,27 +123,27 @@ namespace ks {
     return e;
   }
 
-  FunctionAST* Parser::parse_def() {
+  unique_ptr<FunctionAST> Parser::parse_def() {
     get_next_token(); // eat 'def'
 
-    PrototypeAST *p = parse_prototype();
+    unique_ptr<PrototypeAST> p = parse_prototype();
     if (!p) {
       error("expected prototype after 'def'");
       return nullptr;
     }
 
-    ExprAST *e = parse_expr();
+    unique_ptr<ExprAST> e = parse_expr();
     if (!e) return nullptr;
 
-    return new FunctionAST(p, e);
+    return unique_ptr<FunctionAST>(new FunctionAST(std::move(p), std::move(e)));
   }
 
-  PrototypeAST* Parser::parse_extern() {
+  unique_ptr<PrototypeAST> Parser::parse_extern() {
     get_next_token(); // eat 'extern'
     return parse_prototype();
   }
 
-  PrototypeAST* Parser::parse_prototype() {
+  unique_ptr<PrototypeAST> Parser::parse_prototype() {
     if (curToken != tok_identifier) {
       error("expected function name in prototype");
       return nullptr;
@@ -173,17 +170,17 @@ namespace ks {
     
     get_next_token(); // eat ')'
 
-    return new PrototypeAST(funcName, argNames);
+    return unique_ptr<PrototypeAST>(new PrototypeAST(funcName, argNames));
   }
 
-  FunctionAST* Parser::parse_top() {
-    ExprAST *e = parse_expr();
+  unique_ptr<FunctionAST> Parser::parse_top() {
+    unique_ptr<ExprAST> e = parse_expr();
 
     if (!e) return nullptr;
 
     // Make an anonymous proto
-    PrototypeAST *proto = new PrototypeAST("", std::vector<std::string>());
-    return new FunctionAST(proto, e);
+    unique_ptr<PrototypeAST> proto(new PrototypeAST("", std::vector<std::string>()));
+    return unique_ptr<FunctionAST>(new FunctionAST(std::move(proto), std::move(e)));
   }
 
   void Parser::handle_def() {

@@ -8,40 +8,40 @@ namespace ks {
 
   class Parser : public Lexer {
     // expression ::= primary binoprhs
-    ExprAST* parse_expr();
+    unique_ptr<ExprAST> parse_expr();
 
     // primary
     //   ::= identifierexpr
     //   ::= numberexpr
     //   ::= parenexpr
-    ExprAST* parse_primary();
+    unique_ptr<ExprAST> parse_primary();
 
     // binoprhs
     //   ::= (binop primary)*
-    ExprAST* parse_binOp_RHS(int exprPrec, ExprAST *LHS);
+    unique_ptr<ExprAST> parse_binOp_RHS(int exprPrec, unique_ptr<ExprAST> LHS);
 
     // identifierexpr
     //   ::= identifier
     //   ::= identifier `(` expression* `)`
-    ExprAST* parse_id();
+    unique_ptr<ExprAST> parse_id();
 
     // numberexpr ::= number
-    ExprAST* parse_number();
+    unique_ptr<ExprAST> parse_number();
 
     // parenexpr ::= `(` expression `)`
-    ExprAST* parse_parenexpr();
+    unique_ptr<ExprAST> parse_parenexpr();
 
     // definition ::= `def` prototype expression
-    FunctionAST* parse_def();
+    unique_ptr<FunctionAST> parse_def();
 
     // external ::= 'extern' prototype
-    PrototypeAST* parse_extern();
+    unique_ptr<PrototypeAST> parse_extern();
 
     // prototype ::= identifier `(` identifier* `)`
-    PrototypeAST* parse_prototype();
+    unique_ptr<PrototypeAST> parse_prototype();
 
     // toplevelexpr ::= expression
-    FunctionAST* parse_top();
+    unique_ptr<FunctionAST> parse_top();
 
     // get precedence of curToken
     int get_token_precedence();
