@@ -2,6 +2,7 @@
 
 #include "./Lexer.hpp"
 #include "./AST.hpp"
+#include "./CodeGenerate.h"
 #include <map>
 
 namespace ks {
@@ -50,6 +51,8 @@ namespace ks {
     void handle_def();
     void handle_extern();
     void handle_top_expr();
+
+    CodeGenerateVisitor CGVisitor;
 
     public:
       Parser(std::string input) : Lexer(input) {}

@@ -184,24 +184,33 @@ namespace ks {
   }
 
   void Parser::handle_def() {
-    if (parse_def()) {
-      info("parse a function definition");
+    if (auto FnAST = parse_def()) {
+      if (auto *FnIR = FnAST->accept(&CGVisitor)) {
+        info("parse a function definition");
+        FnIR->dump();
+      }
     } else {
       get_next_token();
     }
   }
 
   void Parser::handle_extern() {
-    if (parse_extern()) {
-      info("parse an extern");
+    if (auto ProtoAST = parse_extern()) {
+      if (auto *FnIR = ProtoAST->accept(&CGVisitor)) {
+        info("parse an extern");
+        FnIR->dump();
+      }
     } else {
       get_next_token();
     }
   }
 
   void Parser::handle_top_expr() {
-    if (parse_top()) {
-      info("parse a top-level expression");
+    if (auto FnAST = parse_top()) {
+      if (auto *FnIR = FnAST->accept(&CGVisitor)) {
+        info("parse a top-level expression");
+        FnIR->dump();
+      }
     } else {
       get_next_token();
     }
