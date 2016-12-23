@@ -23,12 +23,14 @@ namespace ks {
     }
 
     if (isdigit(lastChar) || lastChar == '.') {   // Number: [0-9]+(.[0-9]*)?
-      bool hasDot = (lastChar == '.') ? true : false;
+      bool hasDot = false;
       std::string numStr;
       do {
+        if (lastChar == '.') hasDot = true;
+
         numStr += lastChar;
         lastChar = input[++lastIndex];
-        if (hasDot & (lastChar == '.')) { // detect two '.'
+        if (hasDot && (lastChar == '.')) { // detect two '.'
           err_exit("wrong number format");
         }
       } while (isdigit(lastChar) || lastChar == '.');

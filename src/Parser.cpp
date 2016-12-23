@@ -114,7 +114,7 @@ namespace ks {
 
     if (!e) return nullptr;
 
-    if (curToken != '(') {
+    if (curToken != ')') {
       error("expected ')'");
       return nullptr;
     }
